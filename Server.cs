@@ -16,7 +16,7 @@ namespace SimpleMessenger
         private static readonly byte[] buffer = new byte[BUFFER_SIZE];
 
         public static string groupName;
-        public static string publicChatHistory = "";
+        public static string publicChatHistory = string.Empty;
         public static void ServerInit()
         {
             Console.Title = $"Server {serverSocket.AddressFamily}";
@@ -92,6 +92,7 @@ namespace SimpleMessenger
             Array.Copy(buffer, recBuf, received);
             string text = Encoding.ASCII.GetString(recBuf);
             Console.WriteLine($"Received Text:\n{text}\nEND");
+
 
             if(text.Contains(".h tomasz"))
             {
