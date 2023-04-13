@@ -20,7 +20,17 @@ namespace SimpleMessenger
         public static void ServerInit()
         {
             Console.Title = $"Server {serverSocket.AddressFamily}";
+            Console.Write("Nazwa grupy: ");
             groupName = Console.ReadLine().Trim();
+            while (string.IsNullOrEmpty(groupName))
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("Nazwa grupy nie może być pusta!");
+                Console.ResetColor();
+                Console.WriteLine();
+                Console.Write("Nazwa grupy: ");
+                groupName = Console.ReadLine().Trim();
+            }
             SetupServer();
             Console.ReadLine(); // When we press enter close everything
             CloseAllSockets();
@@ -66,6 +76,9 @@ namespace SimpleMessenger
 
             clientSockets.Add(socket);
             socket.BeginReceive(buffer, 0, BUFFER_SIZE, SocketFlags.None, ReceiveCallback, socket);
+            socket.Send(Encoding.ASCII.GetBytes("SERVERMESSAGE joinservername " + groupName));
+            Thread.Sleep(1000);
+            socket.Send(Encoding.ASCII.GetBytes("SERVERMESSAGE sendchathistory " + publicChatHistory));
             Console.WriteLine("Client connected, waiting for request...");
             serverSocket.BeginAccept(AcceptCallback, null);
         }
@@ -92,26 +105,7 @@ namespace SimpleMessenger
             Array.Copy(buffer, recBuf, received);
             string text = Encoding.ASCII.GetString(recBuf);
             Console.WriteLine($"Received Text:\n{text}\nEND");
-
-
-            if(text.Contains(".h tomasz"))
-            {
-                foreach (var item in clientSockets)
-                {
-                    GlobalMethods.OpenInBrowser("https://cdn.discordapp.com/attachments/924047491731697704/1047979591647633438/image.png");
-                }
-                current.BeginReceive(buffer, 0, BUFFER_SIZE, SocketFlags.None, ReceiveCallback, current);
-                return;
-            }
-            else if (text.Contains(".h adam"))
-            {
-                foreach (var item in clientSockets)
-                {
-                    GlobalMethods.OpenInBrowser("https://cdn.discordapp.com/attachments/964832740761550909/991679652991086713/20220629_142009.jpg");
-                }
-                current.BeginReceive(buffer, 0, BUFFER_SIZE, SocketFlags.None, ReceiveCallback, current);
-                return;
-            }
+            publicChatHistory += text;
 
             byte[] data = Encoding.ASCII.GetBytes(text);
 
@@ -128,38 +122,6 @@ namespace SimpleMessenger
             }
 
             current.BeginReceive(buffer, 0, BUFFER_SIZE, SocketFlags.None, ReceiveCallback, current);
-        }
-    }
-
-    public static class GlobalMethods
-    {
-        public static void OpenInBrowser(string url)
-        {
-            if (string.IsNullOrWhiteSpace(url)) { return; }
-            try
-            {
-                Process.Start(url);
-            }
-            catch
-            {
-                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                {
-                    url = url.Replace("&", "^&");
-                    Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
-                }
-                else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-                {
-                    Process.Start("xdg-open", url);
-                }
-                else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-                {
-                    Process.Start("open", url);
-                }
-                else
-                {
-                    throw;
-                }
-            }
         }
     }
 }

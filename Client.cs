@@ -18,20 +18,20 @@ namespace SimpleMessenger
         {
             Console.WriteLine("Mode: [HOST/CLIENT]");
             Console.Write("> ");
-            string mode = Console.ReadLine().Trim();
+            string mode = Console.ReadLine().Trim().ToLower();
 
 
-            if (mode == "HOST")
+            if (mode == "host")
             {
                 Server.ServerInit();
                 return;
             }
-            else if (mode == "CLIENT")
+            else if (mode == "client")
             {
                 Console.Title = "Client - SimpleMessenger";
                 while (string.IsNullOrWhiteSpace(username))
                 {
-                    Console.WriteLine("Username:");
+                    Console.WriteLine("Nazwa:");
                     Console.Write("> ");
                     username = Console.ReadLine().Trim();
                 }
@@ -47,7 +47,6 @@ namespace SimpleMessenger
 
         public static void GetInput()
         {
-            Console.Write("> ");
             string userInput = Console.ReadLine().Trim();
 
 
@@ -82,7 +81,7 @@ namespace SimpleMessenger
                         case "red":
                             Console.ForegroundColor = ConsoleColor.Red;
                             break;
-                        
+
                         case "cyan":
                             Console.ForegroundColor = ConsoleColor.Cyan;
                             break;
@@ -96,7 +95,7 @@ namespace SimpleMessenger
                             break;
 
                         case "white" or "reset":
-                            Console.ResetColor();   
+                            Console.ResetColor();
                             break;
 
                         default:
@@ -132,13 +131,16 @@ namespace SimpleMessenger
                 try
                 {
                     _clientSocket.Connect(IPAddress.Loopback, serverPort);
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    Console.WriteLine("Połączono!");
+                    Console.ResetColor();
                 }
                 catch (SocketException ex)
                 {
                     connectionAttempts += 1;
                     Console.ForegroundColor = ConsoleColor.Red;
                     Console.WriteLine(ex.Message);
-                    Console.WriteLine($"Connection attempts: {connectionAttempts}\n");
+                    Console.WriteLine($"Próby połączenia: {connectionAttempts}\n");
                     Console.ResetColor();
                 }
             }
@@ -150,7 +152,7 @@ namespace SimpleMessenger
         /// <param name="text">Text to send and encode.</param>
         public static void UploadEncryptedString(string text)
         {
-            byte[] buffer = Encoding.ASCII.GetBytes(FormatSentMessage(text));
+            byte[] buffer = Encoding.ASCII.GetBytes(FormatMessage(text));
             _clientSocket.Send(buffer, 0, buffer.Length, SocketFlags.None);
         }
 
@@ -170,13 +172,44 @@ namespace SimpleMessenger
                 Array.Copy(buffer, data, received);
                 string text = Encoding.ASCII.GetString(data);
 
-                Console.WriteLine(text);
+                if (text.StartsWith("SERVERMESSAGE"))
+                {
+                    string[] serverResponseData = text.Split(" ");
+                    switch (serverResponseData[1].ToLower())
+                    {
+                        case "joinservername":
+                            string groupName = serverResponseData[2];
+                            Console.Write("Dołączono do czatu \"");
+                            Console.ForegroundColor = ConsoleColor.Green;
+                            Console.Write(groupName);
+                            Console.ResetColor();
+                            Console.WriteLine("\"");
+                            break;
+                        case "sendchathistory":
+                            string history = string.Join(" ", serverResponseData.Skip(2));
+                            if (!string.IsNullOrWhiteSpace(history))
+                            {
+                                Console.WriteLine("HISTORIA CZATU\n");
+                                Console.WriteLine(history);
+                                Console.WriteLine("KONIEC HISTORII CZATU");
+                            }
+                            break;
+                        default:
+                            Console.WriteLine(text);
+                            break;
+                    }
+                }
+                else
+                {
+                    Console.WriteLine(text);
+                }
+
 
                 Thread.Sleep(100);
             }
         }
 
-        public static string FormatSentMessage(string text)
+        public static string FormatMessage(string text)
         {
             string message =
                 $"@u/{username}\t\t{DateTime.Now.ToLongTimeString()}\n" +
