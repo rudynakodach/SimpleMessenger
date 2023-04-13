@@ -4,13 +4,6 @@ using System.Text;
 
 #pragma warning disable CS8602 //wyłuskanie odwołania, które może mieć wartośc 'null'.
 
-//dzień dobry tutaj ja ze wczoraj wieczorem
-
-//pisze ten kod bo najprawdopodobniej nie dostane sie na kolejny etap z konkursu kuratoryjnego z informatyki a zależy mi na dobrej ocenie na koneic roku :)
-
-//CLIENT-SIDE LAN MESSENGER
-
-// ~ rudynakodach (8D)
 namespace SimpleMessenger
 {
     public static class Client
@@ -19,7 +12,7 @@ namespace SimpleMessenger
 
         public const int serverPort = 100; //host only on port 100.
 
-        public static string username; //dont allow 'null' names
+        public static string username;
 
         public static void Main()
         {
